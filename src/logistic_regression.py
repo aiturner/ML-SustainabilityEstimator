@@ -2,6 +2,7 @@ from datasets import load_dataset
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from measure_emissions import add_emissions
 import pandas as pd
 
 dataset = load_dataset("cornell-movie-review-data/rotten_tomatoes")
@@ -22,9 +23,10 @@ model.fit(X_train, train_labels)
 predictions = model.predict(X_test)
 accuracy = accuracy_score(test_labels, predictions)
 
-print(f"Accuracy: {accuracy:.4f}")
+#print(f"Accuracy: {accuracy:.4f}")
 
-energy_j = 49.55
+# This value was found from an average of running sudo turbostat -q --Joules --show Pkg_J
+energy_j = 49.55 
 
 results = pd.DataFrame([
     {
@@ -34,6 +36,9 @@ results = pd.DataFrame([
         "runtime_s": 3.82
     }
 ])
+
+
+results = add_emissions(results)
 
 results.to_csv("results/model_comparison.csv", index=False)
 

@@ -1,2 +1,2 @@
-model,accuracy,energy_j,runtime_s
-Logistic Regression,0.7702,49.55,3.82
+model,accuracy,energy_j,runtime_s,energy_kwh,emissions_kgco2e
+Logistic Regression,0.7702,49.55,3.82,1.376e-05,2.75e-06
