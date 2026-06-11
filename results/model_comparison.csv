@@ -1,0 +1,2 @@
+model,accuracy,energy_j,runtime_s
+Logistic Regression,0.7702,49.55,3.82
