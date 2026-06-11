@@ -33,7 +33,7 @@ accuracy = accuracy_score(test_labels, predictions)
 
 print(f"Accuracy: {accuracy:.4f}")
 
-energy_j = 40.95  ## These value was found from an average of running turbostat like in assignment 3
+energy_j = 40.95  # These value was found from an average of running turbostat like in assignment 3
 runtime_s = 3.433  
 
 results = pd.read_csv("results/model_comparison.csv")
@@ -47,7 +47,14 @@ new_row = pd.DataFrame([
     }
 ])
 
-results = pd.concat([results, new_row], ignore_index=True) 
+    if csv_path.exists():
+        results = pd.read_csv(csv_path)
+        results = results[results["model"] != "Linear SVM"]
+    else:
+        results = pd.DataFrame(columns=[
+            "model", "accuracy", "energy_j", "runtime_s", "energy_kwh", "emissions_kgco2e"
+        ])
+        
 results = add_emissions(results)
 
 print(results)
