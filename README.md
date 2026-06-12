@@ -17,18 +17,22 @@ The goal is to identify the model that provides the best balance between perform
 
 ## Dataset
 
-The project uses the Rotten Tomatoes sentiment analysis dataset from Hugging Face.
+The project uses the Amazon Polarity dataset from Hugging Face.
 
 Task:
 
-* Binary sentiment classification
-* Positive vs Negative movie reviews
+Binary sentiment classification
+Positive vs Negative product reviews
 
 Dataset size:
 
-* Training samples: 8,530
-* Validation samples: 1,066
-* Test samples: 1,066
+Full training dataset: 3.6 million reviews
+Full test dataset: 400,000 reviews
+
+To reduce execution time while maintaining realistic scale, the experiments use:
+
+20,000 training samples
+5,000 test samples
 
 ---
 
