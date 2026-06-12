@@ -22,17 +22,17 @@ The project uses the Amazon Polarity dataset from Hugging Face.
 Task:
 
 Binary sentiment classification
-Positive vs Negative product reviews
+Positive vs negative product reviews
 
 Dataset size:
 
 Full training dataset: 3.6 million reviews
 Full test dataset: 400,000 reviews
 
-To reduce execution time while maintaining realistic scale, the experiments use:
+To keep experiments manageable while maintaining realistic scale, a sampled subset is generated locally:
 
-20,000 training samples
-5,000 test samples
+250,000 training examples
+50,000 test examples
 
 ---
 
@@ -67,6 +67,9 @@ Example:
 ```bash
 sudo turbostat -q --Joules --show Pkg_J python <script>
 ```
+Three independent measurements are collected
+Energy consumption is averaged
+Runtime is averaged
 
 The reported `Pkg_J` value represents CPU package energy consumption in Joules.
 
@@ -89,24 +92,32 @@ Energy (kWh) × Carbon Intensity (gCO2e/kWh) / 1000
 
 ---
 
-## Results
+###Results
+Model	Accuracy	Energy (J)	Runtime (s)
+Logistic Regression	0.8948	309.02	16.28
+Multinomial Naive Bayes	0.8502	283.94	15.62
+Linear SVM	0.8961	362.97	20.11
 
-| Model                   | Accuracy | Energy (J) | Runtime (s) |
-| ----------------------- | -------: | ---------: | ----------: |
-| Logistic Regression     |   0.7702 |      49.55 |        3.43 |
-| Multinomial Naive Bayes |   0.7758 |      40.95 |        3.43 |
-| Linear SVM              |   0.7514 |      43.03 |        3.43 |
 
-### Observations
+###Sustainability-Based Model Selection
 
-* Multinomial Naive Bayes achieved the highest accuracy.
-* Multinomial Naive Bayes also consumed the least energy.
-* Logistic Regression consumed the most energy of the evaluated models.
-* Linear SVM achieved the lowest accuracy on this dataset.
+Rather than selecting a model solely based on accuracy, the project evaluates a combination of:
 
-Based on the collected measurements, Multinomial Naive Bayes provides the best balance between predictive performance and sustainability.
+Accuracy
+Energy consumption
+Runtime
+Carbon emissions
 
----
+Each metric is normalised relative to the best-performing model for that metric.
+
+A weighted scoring system is then used:
+
+Score =
+Accuracy Weight × Accuracy Score
++ Emissions Weight × Emissions Score
++ Runtime Weight × Runtime Score
+
+The model with the highest overall score is selected as the recommended model.
 
 ---
 
