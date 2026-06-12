@@ -25,7 +25,7 @@ test_stream = load_dataset(
 print("Sampling data...")
 
 train_sample = list(islice(train_stream, 250000))
-test_sample = list(islice(test_stream, 50000))
+test_sample = list(islice(test_stream, 500000))
 
 pd.DataFrame(train_sample).to_csv(
     DATA_DIR / "amazon_train_sample.csv",
