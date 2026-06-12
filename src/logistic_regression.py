@@ -1,8 +1,6 @@
 from pathlib import Path
-from itertools import islice
 
 import pandas as pd
-from datasets import load_dataset
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
@@ -13,27 +11,26 @@ from measure_emissions import add_emissions
 def main():
     repo_root = Path(__file__).resolve().parents[1]
     results_dir = repo_root / "results"
+    data_dir = repo_root / "data"
     results_dir.mkdir(exist_ok=True)
+    data_dir.mkdir(exist_ok=True)
 
-    train_stream = load_dataset(
-        "fancyzhx/amazon_polarity",
-        split="train",
-        streaming=True,
+    train_df = pd.read_csv(data_dir / "amazon_train_sample.csv")
+    test_df = pd.read_csv(data_dir / "amazon_test_sample.csv")
+
+    train_texts = (
+        train_df["title"].fillna("").astype(str)
+        + " "
+        + train_df["content"].fillna("").astype(str)
     )
-    test_stream = load_dataset(
-        "fancyzhx/amazon_polarity",
-        split="test",
-        streaming=True,
+    train_labels = train_df["label"]
+
+    test_texts = (
+        test_df["title"].fillna("").astype(str)
+        + " "
+        + test_df["content"].fillna("").astype(str)
     )
-
-    train_sample = list(islice(train_stream, 20000))
-    test_sample = list(islice(test_stream, 5000))
-
-    train_texts = [f"{x['title']} {x['content']}" for x in train_sample]
-    train_labels = [x["label"] for x in train_sample]
-
-    test_texts = [f"{x['title']} {x['content']}" for x in test_sample]
-    test_labels = [x["label"] for x in test_sample]
+    test_labels = test_df["label"]
 
     vectorizer = TfidfVectorizer(max_features=5000)
     X_train = vectorizer.fit_transform(train_texts)
@@ -47,9 +44,9 @@ def main():
 
     print(f"Accuracy: {accuracy:.4f}")
 
-    # After running turbostat i added these values in
-    energy_j = 81.99 
-    runtime_s = 7.17 
+    # Using averaged values from turbostat
+    energy_j = 309.02
+    runtime_s = 16.28 
 
     results = pd.DataFrame([
         {
@@ -70,4 +67,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

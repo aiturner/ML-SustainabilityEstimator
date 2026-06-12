@@ -1,11 +1,9 @@
 from pathlib import Path
-from itertools import islice
 
 import pandas as pd
-from datasets import load_dataset
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import accuracy_score
 from sklearn.svm import LinearSVC
+from sklearn.metrics import accuracy_score
 
 from measure_emissions import add_emissions
 
@@ -13,27 +11,26 @@ from measure_emissions import add_emissions
 def main():
     repo_root = Path(__file__).resolve().parents[1]
     results_dir = repo_root / "results"
+    data_dir = repo_root / "data"
     results_dir.mkdir(exist_ok=True)
-    csv_path = results_dir / "model_comparison.csv"
+    data_dir.mkdir(exist_ok=True)
 
-    train_stream = load_dataset(
-        "fancyzhx/amazon_polarity",
-        split="train",
-        streaming=True,
+    train_df = pd.read_csv(data_dir / "amazon_train_sample.csv")
+    test_df = pd.read_csv(data_dir / "amazon_test_sample.csv")
+
+    train_texts = (
+        train_df["title"].fillna("").astype(str)
+        + " "
+        + train_df["content"].fillna("").astype(str)
     )
-    test_stream = load_dataset(
-        "fancyzhx/amazon_polarity",
-        split="test",
-        streaming=True,
+    train_labels = train_df["label"]
+
+    test_texts = (
+        test_df["title"].fillna("").astype(str)
+        + " "
+        + test_df["content"].fillna("").astype(str)
     )
-
-    train_sample = list(islice(train_stream, 20000))
-    test_sample = list(islice(test_stream, 5000))
-
-    train_texts = [f"{x['title']} {x['content']}" for x in train_sample]
-    train_labels = [x["label"] for x in train_sample]
-    test_texts = [f"{x['title']} {x['content']}" for x in test_sample]
-    test_labels = [x["label"] for x in test_sample]
+    test_labels = test_df["label"]
 
     vectorizer = TfidfVectorizer(max_features=5000)
     X_train = vectorizer.fit_transform(train_texts)
@@ -47,8 +44,12 @@ def main():
 
     print(f"Accuracy: {accuracy:.4f}")
 
-    energy_j = 101.95   # turbostat average
-    runtime_s = 11.20 
+    # Using averaged values from turbostat
+    energy_j = 362.97 
+    runtime_s = 20.11
+
+    results = pd.read_csv(results_dir / "model_comparison.csv")
+    results = results[results["model"] != "Linear SVM"]
 
     new_row = pd.DataFrame([
         {
@@ -60,19 +61,11 @@ def main():
     ])
 
     new_row = add_emissions(new_row)
-
-    if csv_path.exists():
-        results = pd.read_csv(csv_path)
-        results = results[results["model"] != "Linear SVM"]
-    else:
-        results = pd.DataFrame(columns=[
-            "model", "accuracy", "energy_j", "runtime_s", "energy_kwh", "emissions_kgco2e"
-        ])
-
     results = pd.concat([results, new_row], ignore_index=True)
-    results.to_csv(csv_path, index=False)
 
     print(results)
+    results.to_csv(results_dir / "model_comparison.csv", index=False)
+    print(f"Results saved to {results_dir / 'model_comparison.csv'}")
 
 
 if __name__ == "__main__":
