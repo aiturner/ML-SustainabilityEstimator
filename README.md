@@ -92,14 +92,14 @@ Energy (kWh) × Carbon Intensity (gCO2e/kWh) / 1000
 
 ---
 
-###Results
+### Results
 Model	Accuracy	Energy (J)	Runtime (s)
 Logistic Regression	0.8948	309.02	16.28
 Multinomial Naive Bayes	0.8502	283.94	15.62
 Linear SVM	0.8961	362.97	20.11
 
 
-###Sustainability-Based Model Selection
+### Sustainability-Based Model Selection
 
 Rather than selecting a model solely based on accuracy, the project evaluates a combination of:
 
