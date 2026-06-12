@@ -52,3 +52,4 @@ To regenerate results run
 rm results/model_comparison.csv
 python src/logistic_regression.py
 python src/naive_bayes.py
+python src/linear_svm.py

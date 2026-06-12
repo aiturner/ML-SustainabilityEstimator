@@ -7,13 +7,13 @@ import pandas as pd
 from measure_emissions import add_emissions
 
 # Load dataset
-dataset = load_dataset("cornell-movie-review-data/rotten_tomatoes")
+dataset = load_dataset("fancyzhx/amazon_polarity")
 
-train_texts = dataset["train"]["text"]
-train_labels = dataset["train"]["label"]
+train_texts = dataset["train"].shuffle(seed=42).select(range(100000))["content"]
+train_labels = dataset["train"].shuffle(seed=42).select(range(100000))["label"]
 
-test_texts = dataset["test"]["text"]
-test_labels = dataset["test"]["label"]
+test_texts = dataset["test"].shuffle(seed=42).select(range(10000))["content"]
+test_labels = dataset["test"].shuffle(seed=42).select(range(10000))["label"]
 
 # Convert text to TF-IDF features
 vectorizer = TfidfVectorizer(max_features=5000)
@@ -38,6 +38,9 @@ runtime_s = 3.433
 
 results = pd.read_csv("results/model_comparison.csv")
 
+# Remove any existing Naive Bayes row
+results = results[results["model"] != "Multinomial Naive Bayes"]
+
 new_row = pd.DataFrame([
     {
         "model": "Multinomial Naive Bayes",
@@ -47,15 +50,9 @@ new_row = pd.DataFrame([
     }
 ])
 
-    if csv_path.exists():
-        results = pd.read_csv(csv_path)
-        results = results[results["model"] != "Linear SVM"]
-    else:
-        results = pd.DataFrame(columns=[
-            "model", "accuracy", "energy_j", "runtime_s", "energy_kwh", "emissions_kgco2e"
-        ])
-        
-results = add_emissions(results)
+new_row = add_emissions(new_row)
+
+results = pd.concat([results, new_row], ignore_index=True)
 
 print(results)
 

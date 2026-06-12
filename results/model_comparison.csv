@@ -1,4 +1,2 @@
 model,accuracy,energy_j,runtime_s,energy_kwh,emissions_kgco2e
-Logistic Regression,0.7702,49.55,3.43,1.376e-05,2.75e-06
-Multinomial Naive Bayes,0.7758,40.95,3.433,1.138e-05,2.28e-06
-Linear SVM,0.7514,0.0,0.0,0.0,0.0
+Logistic Regression,0.877,49.55,3.43,1.376e-05,2.75e-06

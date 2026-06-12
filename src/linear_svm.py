@@ -15,12 +15,13 @@ def main():
     csv_path = repo_root / "results" / "model_comparison.csv"
     csv_path.parent.mkdir(exist_ok=True)
 
-    dataset = load_dataset("cornell-movie-review-data/rotten_tomatoes")
+    dataset = load_dataset("fancyzhx/amazon_polarity")
 
-    train_texts = dataset["train"]["text"]
-    train_labels = dataset["train"]["label"]
-    test_texts = dataset["test"]["text"]
-    test_labels = dataset["test"]["label"]
+    train_texts = dataset["train"].shuffle(seed=42).select(range(100000))["content"]
+    train_labels = dataset["train"].shuffle(seed=42).select(range(100000))["label"]
+
+    test_texts = dataset["test"].shuffle(seed=42).select(range(10000))["content"]
+    test_labels = dataset["test"].shuffle(seed=42).select(range(10000))["label"]
 
     vectorizer = TfidfVectorizer(max_features=5000)
     X_train = vectorizer.fit_transform(train_texts)
