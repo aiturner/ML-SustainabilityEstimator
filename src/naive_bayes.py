@@ -1,60 +1,79 @@
+from pathlib import Path
+from itertools import islice
+
+import pandas as pd
 from datasets import load_dataset
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
-import pandas as pd
 
 from measure_emissions import add_emissions
 
-# Load dataset
-dataset = load_dataset("fancyzhx/amazon_polarity")
 
-train_texts = dataset["train"].shuffle(seed=42).select(range(100000))["content"]
-train_labels = dataset["train"].shuffle(seed=42).select(range(100000))["label"]
+def main():
+    repo_root = Path(__file__).resolve().parents[1]
+    results_dir = repo_root / "results"
+    results_dir.mkdir(exist_ok=True)
+    csv_path = results_dir / "model_comparison.csv"
 
-test_texts = dataset["test"].shuffle(seed=42).select(range(10000))["content"]
-test_labels = dataset["test"].shuffle(seed=42).select(range(10000))["label"]
+    train_stream = load_dataset(
+        "fancyzhx/amazon_polarity",
+        split="train",
+        streaming=True,
+    )
+    test_stream = load_dataset(
+        "fancyzhx/amazon_polarity",
+        split="test",
+        streaming=True,
+    )
 
-# Convert text to TF-IDF features
-vectorizer = TfidfVectorizer(max_features=5000)
+    train_sample = list(islice(train_stream, 20000))
+    test_sample = list(islice(test_stream, 5000))
 
-X_train = vectorizer.fit_transform(train_texts)
-X_test = vectorizer.transform(test_texts)
+    train_texts = [f"{x['title']} {x['content']}" for x in train_sample]
+    train_labels = [x["label"] for x in train_sample]
+    test_texts = [f"{x['title']} {x['content']}" for x in test_sample]
+    test_labels = [x["label"] for x in test_sample]
 
-# Train Naive Bayes
-model = MultinomialNB()
-model.fit(X_train, train_labels)
+    vectorizer = TfidfVectorizer(max_features=5000)
+    X_train = vectorizer.fit_transform(train_texts)
+    X_test = vectorizer.transform(test_texts)
 
-# Predict
-predictions = model.predict(X_test)
+    model = MultinomialNB()
+    model.fit(X_train, train_labels)
 
-# Evaluate
-accuracy = accuracy_score(test_labels, predictions)
+    predictions = model.predict(X_test)
+    accuracy = accuracy_score(test_labels, predictions)
 
-print(f"Accuracy: {accuracy:.4f}")
+    print(f"Accuracy: {accuracy:.4f}")
 
-energy_j = 40.95  # These value was found from an average of running turbostat like in assignment 3
-runtime_s = 3.433  
+    energy_j = 80.62  #value from averaging after turbostat
+    runtime_s = 7.18 
 
-results = pd.read_csv("results/model_comparison.csv")
+    new_row = pd.DataFrame([
+        {
+            "model": "Multinomial Naive Bayes",
+            "accuracy": round(accuracy, 4),
+            "energy_j": energy_j,
+            "runtime_s": runtime_s,
+        }
+    ])
 
-# Remove any existing Naive Bayes row
-results = results[results["model"] != "Multinomial Naive Bayes"]
+    new_row = add_emissions(new_row)
 
-new_row = pd.DataFrame([
-    {
-        "model": "Multinomial Naive Bayes",
-        "accuracy": round(accuracy, 4),
-        "energy_j": energy_j,
-        "runtime_s": runtime_s
-    }
-])
+    if csv_path.exists():
+        results = pd.read_csv(csv_path)
+        results = results[results["model"] != "Multinomial Naive Bayes"]
+    else:
+        results = pd.DataFrame(columns=[
+            "model", "accuracy", "energy_j", "runtime_s", "energy_kwh", "emissions_kgco2e"
+        ])
 
-new_row = add_emissions(new_row)
+    results = pd.concat([results, new_row], ignore_index=True)
+    results.to_csv(csv_path, index=False)
 
-results = pd.concat([results, new_row], ignore_index=True)
+    print(results)
 
-print(results)
 
-results.to_csv("results/model_comparison.csv", index=False)
-
+if __name__ == "__main__":
+    main()
